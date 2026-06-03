@@ -21,8 +21,7 @@ from openpilot.common.swaglog import cloudlog, add_file_handler
 from openpilot.system.version import get_build_metadata
 from openpilot.system.hardware.hw import Paths
 from openpilot.system.hardware import PC
-
-from openpilot.sunnypilot.system.params_migration import run_migration
+from openpilot.system.hardware.ignition_state import ignition_state
 
 
 def manager_init() -> None:
@@ -35,8 +34,8 @@ def manager_init() -> None:
   params.clear_all(ParamKeyFlag.CLEAR_ON_ONROAD_TRANSITION)
   params.clear_all(ParamKeyFlag.CLEAR_ON_OFFROAD_TRANSITION)
   params.clear_all(ParamKeyFlag.CLEAR_ON_IGNITION_ON)
-  # if build_metadata.release_channel:
-  #   params.clear_all(ParamKeyFlag.DEVELOPMENT_ONLY)
+  if build_metadata.release_channel:
+    params.clear_all(ParamKeyFlag.DEVELOPMENT_ONLY)
 
   # device boot mode
   if params.get("DeviceBootMode") == 1:  # start in Always Offroad mode
@@ -50,9 +49,6 @@ def manager_init() -> None:
 
   if params.get_bool("RecordFrontLock"):
     params.put_bool("RecordFront", True)
-
-  if not PC:
-    run_migration(params)
 
   # set unset params to their default value
   for k in params.all_keys():
@@ -155,7 +151,7 @@ def manager_thread() -> None:
     elif not started and started_prev:
       params.clear_all(ParamKeyFlag.CLEAR_ON_OFFROAD_TRANSITION)
 
-    ignition = any(ps.ignitionLine or ps.ignitionCan for ps in sm['pandaStates'] if ps.pandaType != log.PandaState.PandaType.unknown)
+    ignition = ignition_state.update(sm['pandaStates'])
     if ignition and not ignition_prev:
       params.clear_all(ParamKeyFlag.CLEAR_ON_IGNITION_ON)
 

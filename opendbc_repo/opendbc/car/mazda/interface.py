@@ -17,14 +17,22 @@ class CarInterface(CarInterfaceBase):
     ret.safetyConfigs = [get_safety_config(structs.CarParams.SafetyModel.mazda)]
     ret.radarUnavailable = True
 
-    ret.dashcamOnly = candidate not in (CAR.MAZDA_CX5_2022, CAR.MAZDA_CX9_2021)
+    ret.dashcamOnly = False #candidate not in (CAR.MAZDA_CX5_2022, CAR.MAZDA_CX9_2021)
 
     ret.steerActuatorDelay = 0.1
     ret.steerLimitTimer = 0.8
 
     CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
 
-    if candidate not in (CAR.MAZDA_CX5_2022,):
+    # EPS firmware versions that support steering down to 0 speed
+    LOW_SPEED_EPS_FW = (
+      b'KBST-3210X-A-00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
+      b'KSD5-3210X-C-00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
+    )
+    eps_fw = next((fw.fwVersion for fw in car_fw if fw.address == 0x730), None)
+    has_low_speed_eps = eps_fw in LOW_SPEED_EPS_FW
+
+    if not has_low_speed_eps:
       ret.minSteerSpeed = LKAS_LIMITS.DISABLE_SPEED * CV.KPH_TO_MS
 
     ret.centerToFront = ret.wheelbase * 0.41
