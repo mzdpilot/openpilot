@@ -68,7 +68,7 @@ class CAR(Platforms):
   )
   MAZDA_CX9 = MazdaPlatformConfig(
     [MazdaCarDocs("Mazda CX-9 2016-20")],
-    MazdaCarSpecs(mass=4217 * CV.LB_TO_KG, wheelbase=3.1, steerRatio=17.6)
+    MazdaCarSpecs(mass=4217 * CV.LB_TO_KG, wheelbase=2.93, steerRatio=17.6)
   )
   MAZDA_3 = MazdaPlatformConfig(
     [MazdaCarDocs("Mazda 3 2017-18")],
@@ -79,12 +79,13 @@ class CAR(Platforms):
     MazdaCarSpecs(mass=3443 * CV.LB_TO_KG, wheelbase=2.83, steerRatio=15.5)
   )
   MAZDA_CX9_2021 = MazdaPlatformConfig(
-    [MazdaCarDocs("Mazda CX-9 2021-23", video="https://youtu.be/dA3duO4a0O4")],
-    MAZDA_CX9.specs
+    [MazdaCarDocs("Mazda CX-9 2021-23")],
+    MazdaCarSpecs(mass=4409 * CV.LB_TO_KG, wheelbase=2.93, steerRatio=17.6)
+
   )
   MAZDA_CX5_2022 = MazdaPlatformConfig(
     [MazdaCarDocs("Mazda CX-5 2022-25")],
-    MazdaCX5_2022CarSpecs(mass=3728 * CV.LB_TO_KG, wheelbase=2.698, steerRatio=18.1),  # 15.5 is factory spec; 18.1 from paramsd learner (2.9M samples)
+    MazdaCX5_2022CarSpecs(mass=3717 * CV.LB_TO_KG, wheelbase=2.7, steerRatio=18.1),  # 15.5 is factory spec; 18.1 from paramsd learner (2.9M samples)
   )
 
 

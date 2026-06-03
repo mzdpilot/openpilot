@@ -2,7 +2,7 @@ from opendbc.can import CANDefine, CANParser
 from opendbc.car import Bus, create_button_events, structs
 from opendbc.car.common.conversions import Conversions as CV
 from opendbc.car.interfaces import CarStateBase
-from opendbc.car.mazda.values import DBC, LKAS_LIMITS
+from opendbc.car.mazda.values import DBC, LKAS_LIMITS, CAR
 from opendbc.sunnypilot.car.mazda.carstate_ext import CarStateExt
 
 ButtonType = structs.CarState.ButtonEvent.Type
@@ -104,10 +104,11 @@ class CarState(CarStateBase, CarStateExt):
     # Check if LKAS is disabled due to lack of driver torque when all other states indicate
     # it should be enabled (steer lockout). Don't warn until we actually get lkas active
     # and lose it again, i.e, after initial lkas activation
-    if self.CP.minSteerSpeed > 0:
+    if self.CP.minSteerSpeed > 0 and self.CP.carFingerprint != CAR.MAZDA_CX9_2021:
       ret.steerFaultTemporary = self.lkas_allowed_speed and lkas_blocked
     else:
-      # CX-5 2022: EPS accepts steering at all speeds regardless of LKAS_BLOCK.
+      # CX-9 2021 and steer-to-zero capable EPS (minSteerSpeed == 0, e.g. CX-5 2022):
+      # EPS accepts steering at all speeds regardless of LKAS_BLOCK.
       # Verified across 5.5M frames: LKAS_BLOCK never indicates a real steering failure.
       ret.steerFaultTemporary = False
 
