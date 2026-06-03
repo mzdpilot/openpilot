@@ -1,38 +1,36 @@
 #!/usr/bin/env python3
-from opendbc.car import get_safety_config, structs
+from opendbc.car import Bus, get_safety_config, structs
 from opendbc.car.common.conversions import Conversions as CV
 from opendbc.car.interfaces import CarInterfaceBase
 from opendbc.car.mazda.carcontroller import CarController
 from opendbc.car.mazda.carstate import CarState
-from opendbc.car.mazda.values import CAR, LKAS_LIMITS
+from opendbc.car.mazda.radar_interface import RadarInterface
+from opendbc.car.mazda.fingerprints import FW_VERSIONS
+from opendbc.car.mazda.values import CAR, DBC, LKAS_LIMITS
 
 
 class CarInterface(CarInterfaceBase):
   CarState = CarState
   CarController = CarController
+  RadarInterface = RadarInterface
 
   @staticmethod
   def _get_params(ret: structs.CarParams, candidate, fingerprint, car_fw, alpha_long, is_release, docs) -> structs.CarParams:
     ret.brand = "mazda"
     ret.safetyConfigs = [get_safety_config(structs.CarParams.SafetyModel.mazda)]
-    ret.radarUnavailable = True
+    ret.radarUnavailable = Bus.radar not in DBC[candidate]
 
-    ret.dashcamOnly = False #candidate not in (CAR.MAZDA_CX5_2022, CAR.MAZDA_CX9_2021)
+    ret.dashcamOnly = candidate not in (CAR.MAZDA_CX5_2022, CAR.MAZDA_CX9_2021)
+
+    ret.enableBsm = 0x477 in fingerprint[0]
 
     ret.steerActuatorDelay = 0.1
     ret.steerLimitTimer = 0.8
 
     CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
 
-    # EPS firmware versions that support steering down to 0 speed
-    LOW_SPEED_EPS_FW = (
-      b'KBST-3210X-A-00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
-      b'KSD5-3210X-C-00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
-    )
-    eps_fw = next((fw.fwVersion for fw in car_fw if fw.address == 0x730), None)
-    has_low_speed_eps = eps_fw in LOW_SPEED_EPS_FW
-
-    if not has_low_speed_eps:
+    # Only 2022+ CX-5 EPS support steer-to-zero
+    if not any(fw.ecu == 'eps' and fw.fwVersion in FW_VERSIONS[CAR.MAZDA_CX5_2022].get((structs.CarParams.Ecu.eps, 0x730, None), []) for fw in car_fw):
       ret.minSteerSpeed = LKAS_LIMITS.DISABLE_SPEED * CV.KPH_TO_MS
 
     ret.centerToFront = ret.wheelbase * 0.41
