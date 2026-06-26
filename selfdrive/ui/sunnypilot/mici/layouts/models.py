@@ -48,10 +48,8 @@ class CurrentModelInfo(Widget):
     self.info_text.render()
 
 class ModelsLayoutMici(NavScroller):
-  def __init__(self, back_callback: Callable):
+  def __init__(self):
     super().__init__()
-    self.set_back_callback(back_callback)
-    self.original_back_callback = back_callback
     self.focused_widget = None
 
     self.current_model_info = CurrentModelInfo()
@@ -139,9 +137,20 @@ class ModelsLayoutMici(NavScroller):
 
   def _reset_main_view(self):
     self._scroller._items = self.main_items
-    self.set_back_callback(self.original_back_callback)
-    self._scroller.scroll_panel.set_offset(0)
-    self._scroller.scroll_to(0)
+    self._back_callback = None
+    if self.focused_widget and self.focused_widget in self.main_items:
+      x = self._scroller._pad
+      for item in self.main_items:
+        if not item.is_visible:
+          continue
+        if item == self.focused_widget:
+          break
+        x += item.rect.width + self._scroller._spacing
+      self._scroller.scroll_panel.set_offset(0)
+      self._scroller.scroll_to(x)
+      self.focused_widget = None
+    else:
+      self._scroller.scroll_panel.set_offset(0)
 
   def hide_event(self):
     super().hide_event()
@@ -170,7 +179,7 @@ class ModelsLayoutMici(NavScroller):
     self._was_downloading = is_downloading
 
     self.current_model_info.current_model_header.set_text(tr("active model"))
-    model_text = manager.activeBundle.displayName.lower() if manager.activeBundle.ref else f"{DEFAULT_MODEL} (Default)".lower()
+    model_text = manager.activeBundle.displayName.lower() if manager.activeBundle.index > 0 else f"{DEFAULT_MODEL} (Default)".lower()
     self.current_model_info.current_model_text.set_text(model_text)
     self.current_model_info.info_header.set_text(tr("cache size"))
     self.current_model_info.info_text.set_text(f"{ModelsLayout.calculate_cache_size():.2f} MB")
