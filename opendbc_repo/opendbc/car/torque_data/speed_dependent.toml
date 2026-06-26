@@ -1,0 +1,19 @@
+# Speed-dependent torque parameters — per-car speed-binned config.
+#
+# Each entry maps a car fingerprint to:
+#   speed_bp    — speed breakpoints in m/s (bin centers)
+#   laf_bp      — latAccelFactor at each speed
+#   friction_bp — friction coefficient at each speed
+#
+# The online learner (torque estimator) runs independent SVD fits per speed bin.
+# laf_bp/friction_bp provide starting values and define +/-30% sanity bounds.
+#
+# Values from comma 4 device-learned data.
+
+[MAZDA_CX5_2022]
+# STEER_MAX cliff 1200→800 at 32 mph. Bin boundary at 14.2 m/s aligns with cliff.
+# Bins 0-2: SM=1200 (full low-speed authority). Bins 3-6: SM=800 (22% PID headroom).
+# Seeds from device-learned values (2026-04-27, post-speedmax).
+speed_bp    = [6.5, 9.5, 12.0, 16.4, 21.0, 28.0, 35.0]
+laf_bp      = [2.45, 2.49, 2.16, 1.30, 1.37, 1.56, 1.61]
+friction_bp = [0.180, 0.146, 0.148, 0.158, 0.134, 0.121, 0.108]
